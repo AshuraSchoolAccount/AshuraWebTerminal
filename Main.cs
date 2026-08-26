@@ -4,7 +4,7 @@ namespace Main
 { 
     public class Program 
     { 
-        public static string commands = "HELP, EXIT"; 
+        public static string commands = "HELP, EXIT, "; 
         public static string fixedInput = ""; 
         
         static void LoadTerminal() 
@@ -12,7 +12,7 @@ namespace Main
             try 
             { 
                 Console.Write("Enter command: ");
-                string userInput = Console.ReadLine(); 
+                string? userInput = Console.ReadLine(); 
                 fixedInput = userInput != null ? userInput.ToUpper().Trim() : ""; 
             } 
             catch (Exception e) 
