@@ -11,3 +11,47 @@ dotnet run --project AshuraWebTerminal.csproj
 ```
 
 The project can also be opened and run through `AshuraWebTerminal.sln`.
+
+## Browser version
+
+The browser workspace is in `web/` and stores files persistently with IndexedDB. Serve that folder with any static web server, then open its `index.html`:
+
+```bash
+cd web
+python3 -m http.server 8080
+```
+
+
+
+Use `Download backup` to save all browser files and folders as a JSON backup. Use `Load backup` to restore that backup on another browser or after clearing site data.
+
+### Publish on GitHub Pages
+
+The repository includes a GitHub Actions workflow at `.github/workflows/pages.yml` that publishes the `web/` folder.
+
+1. Push the repository to GitHub.
+2. Open **Settings > Pages** in the repository.
+3. Set **Source** to **GitHub Actions**.
+4. Push to `main`, or run **Deploy browser app** from the repository's **Actions** tab.
+
+The site will be published at `https://ashuraschoolaccount.github.io/AshuraWebTerminal/` after the workflow finishes. Browser files are stored separately for each browser and website URL; use the backup buttons to move them.
+
+The C# console and browser app are kept feature-compatible. When a feature is added to `Main.cs`, its matching browser command or control in `web/` should be added in the same change.
+
+## Files
+
+Use these terminal commands. Every argument starts with `-`; quote an argument when it contains spaces:
+
+- `MAKEFILE -path.at -"content"` creates or replaces a file. Without arguments, it prompts for the path and contents.
+- `EDITFILE -path.at -"content"` replaces a file's contents. Without content, it prompts for new contents.
+- `LOADFILE -path.at` prints a saved file. Without an argument, it prompts for the path.
+- `LISTFILES` lists saved folders and `.at` files.
+- `LISTFOLDERS` lists only folders.
+- `OPENFOLDER -name` lists the files and subfolders inside a folder.
+- `ADDFOLDER -name` creates a folder.
+- `PRESETFOLDERS` creates the `documents` and `code` folders.
+- `FETCH -IP` fetches the public IP address.
+
+File paths can include folders, for example `MAKEFILE -code/main.at -"print hello"`.
+
+The `.at` extension is added automatically when it is omitted. On Windows, files are stored in `%LOCALAPPDATA%\AshuraTerminal\files`. Other native platforms use their local application-data directory. WebAssembly uses browser-session storage; a web host with persistent browser storage can replace that store when durable reload-to-reload persistence is required.

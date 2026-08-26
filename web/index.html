@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ashura Terminal</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">ASHURA / WEB TERMINAL</p>
+        <h1>Workspace</h1>
+      </div>
+      <span class="status"><i></i> Browser storage online</span>
+    </header>
+
+    <section class="workspace">
+      <aside class="sidebar">
+        <div class="side-heading">
+          <span>Files</span>
+          <button id="presetButton" title="Create documents and code folders">Preset</button>
+        </div>
+        <div class="backup-actions">
+          <button id="downloadButton">Download backup</button>
+          <button id="loadButton">Load backup</button>
+          <input id="backupInput" type="file" accept="application/json,.json" hidden>
+        </div>
+        <div id="fileTree" class="file-tree"></div>
+      </aside>
+
+      <section class="content">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">COMMAND CONSOLE</p>
+            <h2>Terminal</h2>
+          </div>
+          <button id="clearButton" class="quiet-button">Clear</button>
+        </div>
+        <div id="output" class="output" aria-live="polite"></div>
+        <form id="commandForm" class="command-line">
+          <span>&gt;</span>
+          <input id="commandInput" autocomplete="off" spellcheck="false" placeholder="makefile -code/main.at -&quot;hello world&quot;">
+          <button type="submit">Run</button>
+        </form>
+        <div class="editor-panel">
+          <div class="editor-heading">
+            <label for="pathInput">Active file</label>
+            <span id="editorStatus">No file selected</span>
+          </div>
+          <div class="editor-row">
+            <input id="pathInput" placeholder="code/main.at">
+            <button id="saveButton">Save .at</button>
+          </div>
+          <textarea id="editor" spellcheck="false" placeholder="Choose a file or enter a path, then write here..."></textarea>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

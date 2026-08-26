@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --ink: #17211f;
+  --muted: #6e7b76;
+  --line: #d9e2dc;
+  --paper: #f5f7f1;
+  --panel: #ffffff;
+  --teal: #17796f;
+  --teal-dark: #0e554f;
+  --coral: #e56b53;
+  --yellow: #f0c866;
+  --mono: 'DM Mono', monospace;
+  --sans: 'Space Grotesk', sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; color: var(--ink); font-family: var(--sans); background: radial-gradient(circle at 90% 0%, #dcece0 0, transparent 30%), var(--paper); }
+button, input, textarea { font: inherit; }
+button { cursor: pointer; }
+.shell { width: min(1320px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 48px; }
+.topbar, .panel-heading, .side-heading, .editor-heading, .editor-row { display: flex; align-items: center; justify-content: space-between; }
+.topbar { padding-bottom: 28px; }
+.eyebrow { margin: 0 0 6px; color: var(--teal); font: 500 11px var(--mono); letter-spacing: .12em; }
+h1, h2 { margin: 0; letter-spacing: -.04em; }
+h1 { font-size: clamp(30px, 5vw, 54px); }
+h2 { font-size: 28px; }
+.status { display: flex; gap: 9px; align-items: center; color: var(--muted); font: 12px var(--mono); }
+.status i { display: block; width: 8px; height: 8px; border-radius: 50%; background: #36aa75; box-shadow: 0 0 0 4px #d5efe0; }
+.workspace { display: grid; grid-template-columns: 270px 1fr; min-height: 690px; overflow: hidden; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 20px 55px #2c554016; }
+.sidebar { padding: 22px 16px; background: #eaf0e9; border-right: 1px solid var(--line); }
+.side-heading { padding: 0 8px 17px; font: 600 15px var(--mono); }
+.side-heading button, .quiet-button { border: 0; background: transparent; color: var(--teal); font: 500 11px var(--mono); text-transform: uppercase; }
+.side-heading button:hover, .quiet-button:hover { color: var(--coral); }
+.file-tree { display: grid; gap: 5px; }
+.backup-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0 8px 16px; }
+.backup-actions button { padding: 8px 5px; border: 1px solid var(--line); color: var(--teal-dark); background: #f8fbf5; font: 10px var(--mono); }
+.backup-actions button:hover { border-color: var(--teal); background: #d3e4d8; }
+.tree-item { width: 100%; padding: 9px 10px; border: 0; text-align: left; color: var(--ink); background: transparent; font: 12px var(--mono); }
+.tree-item:hover, .tree-item.active { background: #d3e4d8; color: var(--teal-dark); }
+.tree-item.folder { color: var(--teal); }
+.content { display: grid; grid-template-rows: auto 1fr auto auto; min-width: 0; }
+.panel-heading { padding: 24px 28px 18px; border-bottom: 1px solid var(--line); }
+.output { min-height: 190px; max-height: 310px; overflow: auto; padding: 22px 28px; background: #162522; color: #d4e7d7; font: 13px/1.75 var(--mono); white-space: pre-wrap; }
+.output .accent { color: var(--yellow); }
+.output .error { color: #ff947e; }
+.command-line { display: flex; align-items: center; gap: 12px; padding: 16px 28px; border-bottom: 1px solid var(--line); color: var(--coral); font: 500 17px var(--mono); }
+.command-line input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--ink); background: transparent; font: 14px var(--mono); }
+.command-line button, #saveButton { padding: 9px 14px; border: 0; color: white; background: var(--teal); font: 500 11px var(--mono); text-transform: uppercase; }
+.command-line button:hover, #saveButton:hover { background: var(--teal-dark); }
+.editor-panel { padding: 20px 28px 28px; }
+.editor-heading { margin-bottom: 10px; font: 12px var(--mono); }
+.editor-heading label { color: var(--teal-dark); font-weight: 500; }
+#editorStatus { color: var(--muted); }
+.editor-row { gap: 10px; margin-bottom: 10px; }
+#pathInput { width: 100%; padding: 9px 11px; border: 1px solid var(--line); outline: 0; color: var(--ink); background: #fbfcf8; font: 12px var(--mono); }
+#pathInput:focus { border-color: var(--teal); }
+#editor { display: block; width: 100%; min-height: 175px; resize: vertical; padding: 14px; border: 1px solid var(--line); outline: 0; color: var(--ink); background: #fbfcf8; font: 13px/1.6 var(--mono); }
+#editor:focus { border-color: var(--teal); }
+@media (max-width: 760px) {
+  .shell { width: min(100% - 22px, 620px); padding-top: 20px; }
+  .workspace { grid-template-columns: 1fr; }
+  .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
+  .file-tree { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .panel-heading, .command-line, .editor-panel { padding-left: 18px; padding-right: 18px; }
+  .topbar { align-items: flex-start; gap: 20px; flex-direction: column; }
+}
