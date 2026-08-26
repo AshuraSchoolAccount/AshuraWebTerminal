@@ -21,6 +21,8 @@ cd web
 python3 -m http.server 8080
 ```
 
+By the way the website is up right now so you may run it at `https://ashuraschoolaccount.github.io/AshuraWebTerminal/`. Enjoy bro
+
 
 
 Use `Download backup` to save all browser files and folders as a JSON backup. Use `Load backup` to restore that backup on another browser or after clearing site data.
