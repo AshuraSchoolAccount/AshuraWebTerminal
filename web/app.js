@@ -10,6 +10,13 @@ const commandInput = document.querySelector('#commandInput');
 const pathInput = document.querySelector('#pathInput');
 const editor = document.querySelector('#editor');
 const editorStatus = document.querySelector('#editorStatus');
+const languageInput = document.querySelector('#languageInput');
+const docsLink = document.querySelector('#docsLink');
+const languageDocs = {
+  cpp: 'https://github.com/isocpp/CppCoreGuidelines',
+  python: 'https://github.com/python/cpython/tree/main/Doc',
+  custom: 'https://github.com/AshuraSchoolAccount/AshuraWebTerminal'
+};
 
 function openDatabase() {
   return new Promise((resolve, reject) => {
@@ -142,10 +149,31 @@ async function run(input) {
   const { command, args } = parse(input);
   if (!command) return;
   switch (command) {
-    case 'HELP': print('MAKEFILE, EDITFILE, LOADFILE, LISTFILES, LISTFOLDERS, OPENFOLDER, ADDFOLDER, PRESETFOLDERS, FETCH -IP, CLEAR'); break;
+    case 'HELP': print('MAKEFILE, EDITFILE, LOADFILE, LISTFILES, LISTFOLDERS, OPENFOLDER, ADDFOLDER, PRESETFOLDERS, LANGUAGES, LANGUAGE -name, DOCS -name, FETCH -IP, CLEAR'); break;
+    case 'LANGUAGES': print('Available languages: cpp, python, custom'); break;
+    case 'LANGUAGE':
+      if (args.length !== 1 || !languageDocs[args[0].toLowerCase()]) throw new Error('Choose cpp, python, or custom.');
+      languageInput.value = args[0].toLowerCase();
+      updateDocsLink();
+      print(`Coding language set to ${languageInput.value}.`, 'accent');
+      break;
+    case 'DOCS':
+      if (args.length !== 1 || !languageDocs[args[0].toLowerCase()]) throw new Error('Use DOCS -cpp, DOCS -python, or DOCS -custom.');
+      window.open(languageDocs[args[0].toLowerCase()], '_blank', 'noopener');
+      break;
     case 'CLEAR': output.replaceChildren(); break;
     case 'MAKEFILE': if (args.length > 2) throw new Error('MAKEFILE accepts a path and content.'); await makeFile(args[0] || pathInput.value, args[1]); break;
     case 'EDITFILE': if (!args.length) throw new Error('EDITFILE needs a file path.'); await makeFile(args[0], args[1], true); break;
+    case 'CODE':
+      if (args.length < 1 || args.length > 2) throw new Error('CODE needs a path and optional language.');
+      if (args[1]) {
+        if (!languageDocs[args[1].toLowerCase()]) throw new Error('Choose cpp, python, or custom.');
+        languageInput.value = args[1].toLowerCase();
+        updateDocsLink();
+      }
+      await selectFile(normalizeFile(args[0]));
+      editor.focus();
+      break;
     case 'LOADFILE': await selectFile(normalizeFile(args[0] || pathInput.value)); break;
     case 'LISTFILES': (await all(fileStore)).forEach(file => print(file.path)); break;
     case 'LISTFOLDERS': (await all(folderStore)).forEach(folder => print(`${folder.path}/`)); break;
@@ -176,6 +204,15 @@ document.querySelector('#saveButton').onclick = async () => {
 };
 document.querySelector('#presetButton').onclick = () => run('PRESETFOLDERS');
 document.querySelector('#clearButton').onclick = () => output.replaceChildren();
+function updateDocsLink() { docsLink.href = languageDocs[languageInput.value]; }
+languageInput.onchange = updateDocsLink;
+editor.addEventListener('keydown', async event => {
+  if (event.shiftKey && event.key === 'Enter') {
+    event.preventDefault();
+    try { await makeFile(pathInput.value, editor.value, Boolean(pathInput.value)); }
+    catch (error) { print(error.message, 'error'); }
+  }
+});
 document.querySelector('#downloadButton').onclick = downloadWorkspace;
 document.querySelector('#loadButton').onclick = () => document.querySelector('#backupInput').click();
 document.querySelector('#backupInput').onchange = async event => {

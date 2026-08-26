@@ -8,9 +8,17 @@ namespace Main
 { 
     public class Program 
     { 
-        public static string commands = "HELP, EXIT, FETCH -IP, MAKEFILE [-path.at] [-content], EDITFILE [-path.at], LOADFILE [-path.at], LISTFILES, LISTFOLDERS, OPENFOLDER -name, ADDFOLDER -name, PRESETFOLDERS "; 
+        public static string commands = "HELP, EXIT, FETCH -IP, MAKEFILE [-path.at] [-content], EDITFILE [-path.at], CODE -path.at [-language], LOADFILE [-path.at], LISTFILES, LISTFOLDERS, OPENFOLDER -name, ADDFOLDER -name, PRESETFOLDERS, LANGUAGES, LANGUAGE -name, DOCS -name "; 
         private static readonly HttpClient httpClient = new HttpClient();
         private static readonly IAtFileStore fileStore = CreateFileStore();
+        private static string currentLanguage = "custom";
+        private static readonly Dictionary<string, string> languageDocs = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["cpp"] = "https://github.com/isocpp/CppCoreGuidelines",
+            ["c++"] = "https://github.com/isocpp/CppCoreGuidelines",
+            ["python"] = "https://github.com/python/cpython/tree/main/Doc",
+            ["custom"] = "https://github.com/AshuraSchoolAccount/AshuraWebTerminal"
+        };
 
         private interface IAtFileStore
         {
@@ -202,6 +210,58 @@ namespace Main
             foreach (string entry in fileStore.ListFolder(folderName)) Console.WriteLine(entry);
         }
 
+        private static void SetLanguage(IReadOnlyList<string> arguments)
+        {
+            if (arguments.Count != 1 || !languageDocs.ContainsKey(arguments[0]))
+            {
+                throw new ArgumentException("Choose cpp, python, or custom.");
+            }
+
+            currentLanguage = arguments[0].Equals("c++", StringComparison.OrdinalIgnoreCase) ? "cpp" : arguments[0].ToLowerInvariant();
+            Console.WriteLine($"Coding language set to {currentLanguage}.");
+        }
+
+        private static void CodeFile(IReadOnlyList<string> arguments)
+        {
+            if (arguments.Count is < 1 or > 2) throw new ArgumentException("CODE needs a path and optional language.");
+            string fileName = NormalizeFilePath(arguments[0]);
+            if (arguments.Count == 2) SetLanguage(new[] { arguments[1] });
+            Console.WriteLine($"Editing {fileName} as {currentLanguage}. Press Shift+Enter to save or Escape to cancel.");
+            var content = new StringBuilder();
+            while (true)
+            {
+                ConsoleKeyInfo key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.Escape)
+                {
+                    Console.WriteLine("Edit cancelled.");
+                    return;
+                }
+
+                if (key.Key == ConsoleKey.Enter && key.Modifiers.HasFlag(ConsoleModifiers.Shift))
+                {
+                    fileStore.Save(fileName, content.ToString());
+                    Console.WriteLine($"Saved {fileName}.");
+                    return;
+                }
+
+                if (key.Key == ConsoleKey.Enter)
+                {
+                    content.AppendLine();
+                    Console.WriteLine();
+                }
+                else if (key.Key == ConsoleKey.Backspace && content.Length > 0)
+                {
+                    content.Length--;
+                    Console.Write("\b \b");
+                }
+                else if (!char.IsControl(key.KeyChar))
+                {
+                    content.Append(key.KeyChar);
+                    Console.Write(key.KeyChar);
+                }
+            }
+        }
+
         private static (string Command, List<string> Arguments) ParseInput(string input)
         {
             var tokens = new List<string>();
@@ -281,6 +341,11 @@ namespace Main
                     catch (Exception e) { Console.WriteLine("Could not edit the file: " + e.Message); }
                     break;
 
+                case "CODE":
+                    try { CodeFile(parsedInput.arguments); }
+                    catch (Exception e) { Console.WriteLine("Could not edit the file: " + e.Message); }
+                    break;
+
                 case "LOADFILE":
                     try { LoadFile(parsedInput.arguments); }
                     catch (Exception e) { Console.WriteLine("Could not load the file: " + e.Message); }
@@ -309,6 +374,24 @@ namespace Main
                     fileStore.AddFolder("documents");
                     fileStore.AddFolder("code");
                     Console.WriteLine("Created folders documents and code.");
+                    break;
+
+                case "LANGUAGES":
+                    Console.WriteLine("Available languages: cpp, python, custom");
+                    break;
+
+                case "LANGUAGE":
+                    try { SetLanguage(parsedInput.arguments); }
+                    catch (Exception e) { Console.WriteLine(e.Message); }
+                    break;
+
+                case "DOCS":
+                    if (parsedInput.arguments.Count != 1 || !languageDocs.TryGetValue(parsedInput.arguments[0], out string? documentationUrl))
+                    {
+                        Console.WriteLine("Use DOCS -cpp, DOCS -python, or DOCS -custom.");
+                        break;
+                    }
+                    Console.WriteLine(documentationUrl);
                     break;
 
                 case "FETCH":

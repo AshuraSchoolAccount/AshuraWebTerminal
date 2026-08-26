@@ -41,7 +41,7 @@
         <div id="output" class="output" aria-live="polite"></div>
         <form id="commandForm" class="command-line">
           <span>&gt;</span>
-          <input id="commandInput" autocomplete="off" spellcheck="false" placeholder="makefile -code/main.at -&quot;hello world&quot;">
+          <input id="commandInput" autocomplete="off" spellcheck="false" placeholder="code -code/main.at -python">
           <button type="submit">Run</button>
         </form>
         <div class="editor-panel">
@@ -51,6 +51,12 @@
           </div>
           <div class="editor-row">
             <input id="pathInput" placeholder="code/main.at">
+            <select id="languageInput" aria-label="Coding language">
+              <option value="custom">Custom</option>
+              <option value="cpp">C++</option>
+              <option value="python">Python</option>
+            </select>
+            <a id="docsLink" href="https://github.com/AshuraSchoolAccount/AshuraWebTerminal" target="_blank" rel="noreferrer">Docs</a>
             <button id="saveButton">Save .at</button>
           </div>
           <textarea id="editor" spellcheck="false" placeholder="Choose a file or enter a path, then write here..."></textarea>

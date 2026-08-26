@@ -54,6 +54,9 @@ h2 { font-size: 28px; }
 #editorStatus { color: var(--muted); }
 .editor-row { gap: 10px; margin-bottom: 10px; }
 #pathInput { width: 100%; padding: 9px 11px; border: 1px solid var(--line); outline: 0; color: var(--ink); background: #fbfcf8; font: 12px var(--mono); }
+#languageInput, #docsLink { padding: 9px 10px; border: 1px solid var(--line); color: var(--teal-dark); background: #fbfcf8; font: 11px var(--mono); text-decoration: none; }
+#languageInput { min-width: 100px; }
+#docsLink:hover { border-color: var(--teal); background: #d3e4d8; }
 #pathInput:focus { border-color: var(--teal); }
 #editor { display: block; width: 100%; min-height: 175px; resize: vertical; padding: 14px; border: 1px solid var(--line); outline: 0; color: var(--ink); background: #fbfcf8; font: 13px/1.6 var(--mono); }
 #editor:focus { border-color: var(--teal); }

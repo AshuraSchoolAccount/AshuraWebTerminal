@@ -46,6 +46,7 @@ Use these terminal commands. Every argument starts with `-`; quote an argument w
 
 - `MAKEFILE -path.at -"content"` creates or replaces a file. Without arguments, it prompts for the path and contents.
 - `EDITFILE -path.at -"content"` replaces a file's contents. Without content, it prompts for new contents.
+- `CODE -path.at -language` opens a file for coding. In the Windows console, `Shift+Enter` saves; `Escape` cancels. In the web editor, `Shift+Enter` saves.
 - `LOADFILE -path.at` prints a saved file. Without an argument, it prompts for the path.
 - `LISTFILES` lists saved folders and `.at` files.
 - `LISTFOLDERS` lists only folders.
@@ -53,6 +54,8 @@ Use these terminal commands. Every argument starts with `-`; quote an argument w
 - `ADDFOLDER -name` creates a folder.
 - `PRESETFOLDERS` creates the `documents` and `code` folders.
 - `FETCH -IP` fetches the public IP address.
+
+Supported coding languages are `cpp`, `python`, and `custom`. `DOCS -cpp`, `DOCS -python`, and `DOCS -custom` print GitHub documentation links. The web language selector opens the same links.
 
 File paths can include folders, for example `MAKEFILE -code/main.at -"print hello"`.
 
