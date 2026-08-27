@@ -1,6 +1,6 @@
 # AshuraWebTerminal
 
-## Pre-beta 1
+## Public beta 1
 
 A terminal for the web, built in C#. This terminal will work on windows. I will release web versions that work in web compiler, and a local version with extra features that are only runnable in the windows version (Linux versions may also be shared).
 
@@ -57,6 +57,7 @@ Use these terminal commands. Every argument starts with `-`; quote an argument w
 - `MAKEFILE -path.at -"content"` creates or replaces a file. Without arguments, it prompts for the path and contents.
 - `EDITFILE -path.at -"content"` replaces a file's contents. Without content, it prompts for new contents.
 - `CODE -path.at -language` opens a file for coding. In the Windows console, `Shift+Enter` saves; `Escape` cancels. In the web editor, `Shift+Enter` saves.
+- `RUN -path` runs a file based on its extension. Windows supports `.at`, `.py`, `.cpp`, `.cc`, `.cxx`, `.cs`, and `.csx` when the matching runtime or compiler is installed. The browser runs `.at` files and can load Python through Pyodide; C++ and C# require the Windows version because browsers cannot launch native compilers or the .NET runtime.
 - `LOADFILE -path.at` prints a saved file. Without an argument, it prompts for the path.
 - `LISTFILES` lists saved folders and `.at` files.
 - `LISTFOLDERS` lists only folders.
@@ -70,5 +71,7 @@ Supported coding languages are `cpp`, `csharp`, `python`, and `custom`. C# also 
 The custom language profile is documented in [docs/CUSTOM_LANGUAGE.md](docs/CUSTOM_LANGUAGE.md).
 
 File paths can include folders, for example `MAKEFILE -code/main.at -"print hello"`.
+
+Custom `.at` files use one command per line: `echo`/`print`, `set NAME value`, `load path`, `make path content`, `list`, `mkdir folder`, and `run path`. Lines beginning with `#` are comments. Variables can be referenced as `$NAME`.
 
 The `.at` extension is added automatically when it is omitted. On Windows, files are stored in `%LOCALAPPDATA%\AshuraTerminal\files`. Other native platforms use their local application-data directory. WebAssembly uses browser-session storage; a web host with persistent browser storage can replace that store when durable reload-to-reload persistence is required.

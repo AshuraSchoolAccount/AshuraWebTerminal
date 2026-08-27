@@ -1,9 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ashura Terminal</title>
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --ink: #17211f;
+  --muted: #6e7b76;
+  --line: #d9e2dc;
+  --paper: #f5f7f1;
+  --panel: #ffffff;
+  --teal: #17796f;
+  --teal-dark: #0e554f;
+  --coral: #e56b53;
+  --yellow: #f0c866;
+  --mono: 'DM Mono', monospace;
+  --sans: 'Space Grotesk', sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; color: var(--ink); font-family: var(--sans); background: radial-gradient(circle at 90% 0%, #dcece0 0, transparent 30%), var(--paper); }
+button, input, textarea { font: inherit; }
+button { cursor: pointer; }
+.shell { width: min(1320px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 48px; }
+.topbar, .panel-heading, .side-heading, .editor-heading, .editor-row { display: flex; align-items: center; justify-content: space-between; }
+.topbar { padding-bottom: 28px; }
+.eyebrow { margin: 0 0 6px; color: var(--teal); font: 500 11px var(--mono); letter-spacing: .12em; }
+h1, h2 { margin: 0; letter-spacing: -.04em; }
+h1 { font-size: clamp(30px, 5vw, 54px); }
+h2 { font-size: 28px; }
+.status { display: flex; gap: 9px; align-items: center; color: var(--muted); font: 12px var(--mono); }
+.status i { display: block; width: 8px; height: 8px; border-radius: 50%; background: #36aa75; box-shadow: 0 0 0 4px #d5efe0; }
+.workspace { display: grid; grid-template-columns: 270px 1fr; min-height: 690px; overflow: hidden; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 20px 55px #2c554016; }
+.sidebar { padding: 22px 16px; background: #eaf0e9; border-right: 1px solid var(--line); }
+.side-heading { padding: 0 8px 17px; font: 600 15px var(--mono); }
+.side-heading button, .quiet-button { border: 0; background: transparent; color: var(--teal); font: 500 11px var(--mono); text-transform: uppercase; }
+.side-heading button:hover, .quiet-button:hover { color: var(--coral); }
+.file-tree { display: grid; gap: 5px; }
+.backup-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0 8px 16px; }
+.backup-actions button { padding: 8px 5px; border: 1px solid var(--line); color: var(--teal-dark); background: #f8fbf5; font: 10px var(--mono); }
+.backup-actions button:hover { border-color: var(--teal); background: #d3e4d8; }
+.tree-item { width: 100%; padding: 9px 10px; border: 0; text-align: left; color: var(--ink); background: transparent; font: 12px var(--mono); }
+.tree-item:hover, .tree-item.active { background: #d3e4d8; color: var(--teal-dark); }
+.tree-item.folder { color: var(--teal); }
+.content { display: grid; grid-template-rows: auto 1fr auto auto; min-width: 0; }
+.panel-heading { padding: 24px 28px 18px; border-bottom: 1px solid var(--line); }
+.output { min-height: 190px; max-height: 310px; overflow: auto; padding: 22px 28px; background: #162522; color: #d4e7d7; font: 13px/1.75 var(--mono); white-space: pre-wrap; }
+.output .accent { color: var(--yellow); }
+.output .error { color: #ff947e; }
+.command-line { display: flex; align-items: center; gap: 12px; padding: 16px 28px; border-bottom: 1px solid var(--line); color: var(--coral); font: 500 17px var(--mono); }
+.command-line input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--ink); background: transparent; font: 14px var(--mono); }
+.command-line button, #saveButton { padding: 9px 14px; border: 0; color: white; background: var(--teal); font: 500 11px var(--mono); text-transform: uppercase; }
+.command-line button:hover, #saveButton:hover { background: var(--teal-dark); }
+.editor-panel { padding: 20px 28px 28px; }
+.editor-heading { margin-bottom: 10px; font: 12px var(--mono); }
+.editor-heading label { color: var(--teal-dark); font-weight: 500; }
+#editorStatus { color: var(--muted); }
+.editor-row { gap: 10px; margin-bottom: 10px; }
+#pathInput { width: 100%; padding: 9px 11px; border: 1px solid var(--line); outline: 0; color: var(--ink); background: #fbfcf8; font: 12px var(--mono); }
+#languageInput, #docsLink { padding: 9px 10px; border: 1px solid var(--line); color: var(--teal-dark); background: #fbfcf8; font: 11px var(--mono); text-decoration: none; }
+#languageInput { min-width: 100px; }
+#docsLink:hover { border-color: var(--teal); background: #d3e4d8; }
+#pathInput:focus { border-color: var(--teal); }
+#editor { display: block; width: 100%; min-height: 175px; resize: vertical; padding: 14px; border: 1px solid var(--line); outline: 0; color: var(--ink); background: #fbfcf8; font: 13px/1.6 var(--mono); }
+#editor:focus { border-color: var(--teal); }
+@media (max-width: 760px) {
+  .shell { width: min(100% - 22px, 620px); padding-top: 20px; }
+  .workspace { grid-template-columns: 1fr; }
+  .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
+  .file-tree { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .panel-heading, .command-line, .editor-panel { padding-left: 18px; padding-right: 18px; }
+  .topbar { align-items: flex-start; gap: 20px; flex-direction: column; }
+}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">ASHURA / WEB TERMINAL / PUBLIC BETA 1</p>
+        <h1>Workspace</h1>
+      </div>
+      <span class="status"><i></i> Browser storage online</span>
+    </header>
+
+    <section class="workspace">
+      <aside class="sidebar">
+        <div class="side-heading">
+          <span>Files</span>
+          <button id="presetButton" title="Create documents and code folders">Preset</button>
+        </div>
+        <div class="backup-actions">
+          <button id="downloadButton">Download backup</button>
+          <button id="loadButton">Load backup</button>
+          <input id="backupInput" type="file" accept="application/json,.json" hidden>
+        </div>
+        <div id="fileTree" class="file-tree"></div>
+      </aside>
+
+      <section class="content">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">COMMAND CONSOLE</p>
+            <h2>Terminal</h2>
+          </div>
+          <button id="clearButton" class="quiet-button">Clear</button>
+        </div>
+        <div id="output" class="output" aria-live="polite"></div>
+        <form id="commandForm" class="command-line">
+          <span>&gt;</span>
+          <input id="commandInput" autocomplete="off" spellcheck="false" placeholder="run -code/main.py">
+          <button type="submit">Run</button>
+        </form>
+        <div class="editor-panel">
+          <div class="editor-heading">
+            <label for="pathInput">Active file</label>
+            <span id="editorStatus">No file selected</span>
+          </div>
+          <div class="editor-row">
+            <input id="pathInput" placeholder="code/main.at">
+            <select id="languageInput" aria-label="Coding language">
+              <option value="custom">Custom</option>
+              <option value="cpp">C++</option>
+              <option value="csharp">C#</option>
+              <option value="python">Python</option>
+            </select>
+            <a id="docsLink" href="https://github.com/AshuraSchoolAccount/AshuraWebTerminal" target="_blank" rel="noreferrer">Docs</a>
+            <button id="saveButton">Save .at</button>
+          </div>
+          <textarea id="editor" spellcheck="false" placeholder="Choose a file or enter a path, then write here..."></textarea>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script>
 const databaseName = 'ashura-terminal';
 const databaseVersion = 1;
 const fileStore = 'files';
 const folderStore = 'folders';
 let database;
-let pyodidePromise;
 
 const output = document.querySelector('#output');
 const tree = document.querySelector('#fileTree');
@@ -89,6 +227,16 @@ function normalizeFile(value) {
   if (!path || path.startsWith('/') || path.includes('..') || path.split('/').some(part => !part)) throw new Error('Use a relative .at path such as documents/example.at.');
   return path;
 }
+function normalizeFolder(value) {
+  const path = value.trim().replaceAll('\\', '/').replace(/^\/+|\/+$/g, '');
+  if (!path || path.includes('..') || path.split('/').some(part => !part)) throw new Error('Use a relative folder name such as documents.');
+  return path;
+}
+async function ensureParents(path) {
+  const parts = path.split('/');
+  for (let index = 1; index < parts.length; index++) await saveFolder(parts.slice(0, index).join('/'));
+}
+let pyodidePromise;
 async function runFile(path) {
   const file = await loadFile(path);
   if (!file) throw new Error(`File '${path}' does not exist.`);
@@ -155,15 +303,6 @@ async function runCustomFile(source) {
       default: throw new Error(`Custom line ${index + 1}: unknown command '${parts[0]}'.`);
     }
   }
-}
-function normalizeFolder(value) {
-  const path = value.trim().replaceAll('\\', '/').replace(/^\/+|\/+$/g, '');
-  if (!path || path.includes('..') || path.split('/').some(part => !part)) throw new Error('Use a relative folder name such as documents.');
-  return path;
-}
-async function ensureParents(path) {
-  const parts = path.split('/');
-  for (let index = 1; index < parts.length; index++) await saveFolder(parts.slice(0, index).join('/'));
 }
 function parse(input) {
   const tokens = input.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
@@ -308,3 +447,6 @@ document.querySelector('#backupInput').onchange = async event => {
     await refreshTree();
   } catch (error) { print(`Browser storage unavailable: ${error.message}`, 'error'); }
 })();
+  </script>
+</body>
+</html>

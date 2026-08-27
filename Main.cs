@@ -1,5 +1,7 @@
 using System;
+using System.ComponentModel;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text;
@@ -8,8 +10,8 @@ namespace Main
 { 
     public class Program 
     { 
-        private const string Version = "Pre-beta 1";
-        public static string commands = "HELP, EXIT, FETCH -IP, MAKEFILE [-path.at] [-content], EDITFILE [-path.at], CODE -path.at [-language], LOADFILE [-path.at], LISTFILES, LISTFOLDERS, OPENFOLDER -name, ADDFOLDER -name, PRESETFOLDERS, LANGUAGES, LANGUAGE -name, DOCS -name "; 
+        private const string Version = "Public beta 1";
+        public static string commands = "HELP, EXIT, FETCH -IP, MAKEFILE [-path], EDITFILE [-path], CODE -path [-language], RUN -path, LOADFILE [-path], LISTFILES, LISTFOLDERS, OPENFOLDER -name, ADDFOLDER -name, PRESETFOLDERS, LANGUAGES, LANGUAGE -name, DOCS -name ";
         private static readonly HttpClient httpClient = new HttpClient();
         private static readonly IAtFileStore fileStore = CreateFileStore();
         private static string currentLanguage = "custom";
@@ -133,7 +135,7 @@ namespace Main
         private static string NormalizeFilePath(string fileName)
         {
             string normalized = fileName.Trim();
-            if (!normalized.EndsWith(".at", StringComparison.OrdinalIgnoreCase)) normalized += ".at";
+            if (Path.GetExtension(normalized).Length == 0) normalized += ".at";
 
             normalized = normalized.Replace('\\', '/');
             if (normalized.Length <= 3 || normalized.StartsWith('/') || normalized.Contains("../", StringComparison.Ordinal) ||
@@ -144,6 +146,161 @@ namespace Main
             }
 
             return normalized;
+        }
+
+        private static async Task RunFile(IReadOnlyList<string> arguments)
+        {
+            if (arguments.Count != 1) throw new ArgumentException("RUN needs one file path.");
+            string fileName = NormalizeFilePath(arguments[0]);
+            string source = fileStore.Load(fileName);
+            string extension = Path.GetExtension(fileName).ToLowerInvariant();
+            string workDirectory = Path.Combine(Path.GetTempPath(), "AshuraTerminal", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(workDirectory);
+
+            try
+            {
+                switch (extension)
+                {
+                    case ".at":
+                        await RunCustomFile(source);
+                        break;
+                    case ".py":
+                        await RunExternal(new[] { "py", "python" }, new[] { "-c", source }, workDirectory);
+                        break;
+                    case ".cpp":
+                    case ".cc":
+                    case ".cxx":
+                        string cppSource = Path.Combine(workDirectory, "program.cpp");
+                        string cppOutput = Path.Combine(workDirectory, OperatingSystem.IsWindows() ? "program.exe" : "program");
+                        File.WriteAllText(cppSource, source, Encoding.UTF8);
+                        await RunExternal(new[] { "g++", "clang++" }, new[] { cppSource, "-o", cppOutput }, workDirectory);
+                        await RunExternal(new[] { cppOutput }, Array.Empty<string>(), workDirectory);
+                        break;
+                    case ".cs":
+                    case ".csx":
+                        string projectDirectory = Path.Combine(workDirectory, "project");
+                        Directory.CreateDirectory(projectDirectory);
+                        File.WriteAllText(Path.Combine(projectDirectory, "Program.cs"), source, Encoding.UTF8);
+                        File.WriteAllText(Path.Combine(projectDirectory, "project.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup></Project>");
+                        await RunExternal(new[] { "dotnet" }, new[] { "run", "--project", Path.Combine(projectDirectory, "project.csproj") }, projectDirectory);
+                        break;
+                    default:
+                        throw new ArgumentException("RUN supports .at, .py, .cpp, .cc, .cxx, .cs, and .csx files.");
+                }
+            }
+            finally
+            {
+                if (Directory.Exists(workDirectory)) Directory.Delete(workDirectory, true);
+            }
+        }
+
+        private static async Task RunCustomFile(string source)
+        {
+            var variables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            string[] lines = source.Replace("\r", "").Split('\n');
+            for (int index = 0; index < lines.Length; index++)
+            {
+                string line = lines[index].Trim();
+                if (line.Length == 0 || line.StartsWith('#')) continue;
+                int commentStart = line.IndexOf(" #", StringComparison.Ordinal);
+                if (commentStart >= 0) line = line[..commentStart].TrimEnd();
+                List<string> parts = SplitCustomArguments(line);
+                if (parts.Count == 0) continue;
+
+                string command = parts[0].ToLowerInvariant();
+                string value = parts.Count > 1 ? string.Join(" ", parts.Skip(1)) : "";
+                switch (command)
+                {
+                    case "echo":
+                    case "print":
+                        Console.WriteLine(ExpandVariables(value, variables));
+                        break;
+                    case "set":
+                        if (parts.Count < 3) throw new ArgumentException($"Custom line {index + 1}: set needs a name and value.");
+                        variables[parts[1]] = ExpandVariables(string.Join(" ", parts.Skip(2)), variables);
+                        break;
+                    case "load":
+                        if (parts.Count != 2) throw new ArgumentException($"Custom line {index + 1}: load needs a file path.");
+                        Console.WriteLine(fileStore.Load(NormalizeFilePath(parts[1])));
+                        break;
+                    case "make":
+                        if (parts.Count < 3) throw new ArgumentException($"Custom line {index + 1}: make needs a path and content.");
+                        fileStore.Save(NormalizeFilePath(parts[1]), ExpandVariables(string.Join(" ", parts.Skip(2)), variables));
+                        break;
+                    case "list":
+                        foreach (string fileName in fileStore.Files) Console.WriteLine(fileName);
+                        break;
+                    case "mkdir":
+                        if (parts.Count != 2) throw new ArgumentException($"Custom line {index + 1}: mkdir needs a folder name.");
+                        fileStore.AddFolder(NormalizeFolderPath(parts[1]));
+                        break;
+                    case "run":
+                        if (parts.Count != 2) throw new ArgumentException($"Custom line {index + 1}: run needs a file path.");
+                        await RunFile(new[] { ExpandVariables(parts[1], variables) });
+                        break;
+                    default:
+                        throw new ArgumentException($"Custom line {index + 1}: unknown command '{parts[0]}'.");
+                }
+            }
+        }
+
+        private static List<string> SplitCustomArguments(string line)
+        {
+            var parts = new List<string>();
+            var part = new StringBuilder();
+            bool quoted = false;
+            foreach (char character in line)
+            {
+                if (character == '"') quoted = !quoted;
+                else if (char.IsWhiteSpace(character) && !quoted)
+                {
+                    if (part.Length > 0) { parts.Add(part.ToString()); part.Clear(); }
+                }
+                else part.Append(character);
+            }
+            if (quoted) throw new ArgumentException("Custom language arguments cannot contain an unmatched quote.");
+            if (part.Length > 0) parts.Add(part.ToString());
+            return parts;
+        }
+
+        private static string ExpandVariables(string value, IReadOnlyDictionary<string, string> variables)
+        {
+            foreach ((string name, string replacement) in variables) value = value.Replace($"${name}", replacement, StringComparison.OrdinalIgnoreCase);
+            return value;
+        }
+
+        private static async Task RunExternal(IEnumerable<string> programs, IEnumerable<string> arguments, string workingDirectory)
+        {
+            Exception? lastError = null;
+            foreach (string program in programs)
+            {
+                try
+                {
+                    var startInfo = new ProcessStartInfo(program)
+                    {
+                        WorkingDirectory = workingDirectory,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    foreach (string argument in arguments) startInfo.ArgumentList.Add(argument);
+                    using Process process = Process.Start(startInfo) ?? throw new InvalidOperationException($"Could not start {program}.");
+                    string standardOutput = await process.StandardOutput.ReadToEndAsync();
+                    string standardError = await process.StandardError.ReadToEndAsync();
+                    await process.WaitForExitAsync();
+                    if (standardOutput.Length > 0) Console.Write(standardOutput);
+                    if (standardError.Length > 0) Console.Error.Write(standardError);
+                    if (process.ExitCode != 0) throw new InvalidOperationException($"{program} exited with code {process.ExitCode}.");
+                    return;
+                }
+                catch (Win32Exception e)
+                {
+                    lastError = e;
+                }
+            }
+
+            throw new InvalidOperationException($"No supported runtime was found ({string.Join(" or ", programs)}).", lastError);
         }
 
         private static string NormalizeFolderPath(string folderName)
@@ -353,6 +510,11 @@ namespace Main
                 case "CODE":
                     try { CodeFile(parsedInput.arguments); }
                     catch (Exception e) { Console.WriteLine("Could not edit the file: " + e.Message); }
+                    break;
+
+                case "RUN":
+                    try { await RunFile(parsedInput.arguments); }
+                    catch (Exception e) { Console.WriteLine("Could not run the file: " + e.Message); }
                     break;
 
                 case "LOADFILE":
