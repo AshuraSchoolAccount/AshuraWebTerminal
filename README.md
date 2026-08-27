@@ -16,7 +16,11 @@ The project can also be opened and run through `AshuraWebTerminal.sln`.
 
 ## THIS VERSION WILL NOT WORK IN SCHOOL
 
-This is only if you have lightspeed blocker on you computer. Lightspeed will block "domain sharing" websites, so this is blocked. The only way to run the web version on a chromebook in school is to copy the web code (css, js, and html) and import it into a html loader. ##This will not save the files or anything, until saving and loading storage is added (I am not sure if it is, I do not remember adding it.
+This is only if you have lightspeed blocker on you computer. Lightspeed will block "domain sharing" websites, so this is blocked. The only way to run the web version on a chromebook in school is to copy the web code (css, js, and html) and import it into a html loader. 
+
+## This will not save the files or anything, until saving and loading storage is added (I am not sure if it is, I do not remember adding it. (I am talking about using this with lightspeed extension)
+
+## No blocker extension, Great! View below
 
 The browser workspace is in `web/` and stores files persistently with IndexedDB. Serve that folder with any static web server, then open its `index.html`:
 
