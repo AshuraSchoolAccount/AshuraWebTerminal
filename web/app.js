@@ -14,9 +14,11 @@ const languageInput = document.querySelector('#languageInput');
 const docsLink = document.querySelector('#docsLink');
 const languageDocs = {
   cpp: 'https://github.com/isocpp/CppCoreGuidelines',
+  csharp: 'https://learn.microsoft.com/dotnet/csharp/',
   python: 'https://github.com/python/cpython/tree/main/Doc',
-  custom: 'https://github.com/AshuraSchoolAccount/AshuraWebTerminal'
+  custom: 'https://github.com/AshuraSchoolAccount/AshuraWebTerminal/blob/main/docs/CUSTOM_LANGUAGE.md'
 };
+const languageAliases = { 'c++': 'cpp', 'c#': 'csharp', cs: 'csharp' };
 
 function openDatabase() {
   return new Promise((resolve, reject) => {
@@ -150,16 +152,21 @@ async function run(input) {
   if (!command) return;
   switch (command) {
     case 'HELP': print('MAKEFILE, EDITFILE, LOADFILE, LISTFILES, LISTFOLDERS, OPENFOLDER, ADDFOLDER, PRESETFOLDERS, LANGUAGES, LANGUAGE -name, DOCS -name, FETCH -IP, CLEAR'); break;
-    case 'LANGUAGES': print('Available languages: cpp, python, custom'); break;
+    case 'LANGUAGES': print('Available languages: cpp, csharp, python, custom'); break;
     case 'LANGUAGE':
-      if (args.length !== 1 || !languageDocs[args[0].toLowerCase()]) throw new Error('Choose cpp, python, or custom.');
-      languageInput.value = args[0].toLowerCase();
+      if (args.length !== 1) throw new Error('Choose cpp, csharp, python, or custom.');
+      languageInput.value = languageAliases[args[0].toLowerCase()] || args[0].toLowerCase();
+      if (!languageDocs[languageInput.value]) throw new Error('Choose cpp, csharp, python, or custom.');
       updateDocsLink();
       print(`Coding language set to ${languageInput.value}.`, 'accent');
       break;
     case 'DOCS':
-      if (args.length !== 1 || !languageDocs[args[0].toLowerCase()]) throw new Error('Use DOCS -cpp, DOCS -python, or DOCS -custom.');
-      window.open(languageDocs[args[0].toLowerCase()], '_blank', 'noopener');
+      if (args.length !== 1) throw new Error('Use DOCS -cpp, DOCS -csharp, DOCS -python, or DOCS -custom.');
+      {
+        const language = languageAliases[args[0].toLowerCase()] || args[0].toLowerCase();
+        if (!languageDocs[language]) throw new Error('Use DOCS -cpp, DOCS -csharp, DOCS -python, or DOCS -custom.');
+        window.open(languageDocs[language], '_blank', 'noopener');
+      }
       break;
     case 'CLEAR': output.replaceChildren(); break;
     case 'MAKEFILE': if (args.length > 2) throw new Error('MAKEFILE accepts a path and content.'); await makeFile(args[0] || pathInput.value, args[1]); break;
@@ -167,8 +174,8 @@ async function run(input) {
     case 'CODE':
       if (args.length < 1 || args.length > 2) throw new Error('CODE needs a path and optional language.');
       if (args[1]) {
-        if (!languageDocs[args[1].toLowerCase()]) throw new Error('Choose cpp, python, or custom.');
-        languageInput.value = args[1].toLowerCase();
+        languageInput.value = languageAliases[args[1].toLowerCase()] || args[1].toLowerCase();
+        if (!languageDocs[languageInput.value]) throw new Error('Choose cpp, csharp, python, or custom.');
         updateDocsLink();
       }
       await selectFile(normalizeFile(args[0]));
@@ -228,7 +235,7 @@ document.querySelector('#backupInput').onchange = async event => {
 (async () => {
   try {
     database = await openDatabase();
-    print('Ashura Terminal ready. Files persist in this browser with IndexedDB.', 'accent');
+    print('Ashura Terminal Pre-beta 1 ready. Files persist in this browser with IndexedDB.', 'accent');
     await refreshTree();
   } catch (error) { print(`Browser storage unavailable: ${error.message}`, 'error'); }
 })();

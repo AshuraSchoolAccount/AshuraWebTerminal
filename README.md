@@ -1,5 +1,7 @@
 # AshuraWebTerminal
 
+## Pre-beta 1
+
 A terminal for the web, built in C#. This terminal will work on windows. I will release web versions that work in web compiler, and a local version with extra features that are only runnable in the windows version (Linux versions may also be shared).
 
 ## Run
@@ -63,7 +65,9 @@ Use these terminal commands. Every argument starts with `-`; quote an argument w
 - `PRESETFOLDERS` creates the `documents` and `code` folders.
 - `FETCH -IP` fetches the public IP address.
 
-Supported coding languages are `cpp`, `python`, and `custom`. `DOCS -cpp`, `DOCS -python`, and `DOCS -custom` print GitHub documentation links. The web language selector opens the same links.
+Supported coding languages are `cpp`, `csharp`, `python`, and `custom`. C# also accepts `c#` and `cs` as aliases. `DOCS -cpp`, `DOCS -csharp`, `DOCS -python`, and `DOCS -custom` open documentation links. The web language selector opens the same links.
+
+The custom language profile is documented in [docs/CUSTOM_LANGUAGE.md](docs/CUSTOM_LANGUAGE.md).
 
 File paths can include folders, for example `MAKEFILE -code/main.at -"print hello"`.
 

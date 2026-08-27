@@ -8,6 +8,7 @@ namespace Main
 { 
     public class Program 
     { 
+        private const string Version = "Pre-beta 1";
         public static string commands = "HELP, EXIT, FETCH -IP, MAKEFILE [-path.at] [-content], EDITFILE [-path.at], CODE -path.at [-language], LOADFILE [-path.at], LISTFILES, LISTFOLDERS, OPENFOLDER -name, ADDFOLDER -name, PRESETFOLDERS, LANGUAGES, LANGUAGE -name, DOCS -name "; 
         private static readonly HttpClient httpClient = new HttpClient();
         private static readonly IAtFileStore fileStore = CreateFileStore();
@@ -16,8 +17,11 @@ namespace Main
         {
             ["cpp"] = "https://github.com/isocpp/CppCoreGuidelines",
             ["c++"] = "https://github.com/isocpp/CppCoreGuidelines",
+            ["csharp"] = "https://learn.microsoft.com/dotnet/csharp/",
+            ["c#"] = "https://learn.microsoft.com/dotnet/csharp/",
+            ["cs"] = "https://learn.microsoft.com/dotnet/csharp/",
             ["python"] = "https://github.com/python/cpython/tree/main/Doc",
-            ["custom"] = "https://github.com/AshuraSchoolAccount/AshuraWebTerminal"
+            ["custom"] = "https://github.com/AshuraSchoolAccount/AshuraWebTerminal/blob/main/docs/CUSTOM_LANGUAGE.md"
         };
 
         private interface IAtFileStore
@@ -214,10 +218,15 @@ namespace Main
         {
             if (arguments.Count != 1 || !languageDocs.ContainsKey(arguments[0]))
             {
-                throw new ArgumentException("Choose cpp, python, or custom.");
+                throw new ArgumentException("Choose cpp, csharp, python, or custom.");
             }
 
-            currentLanguage = arguments[0].Equals("c++", StringComparison.OrdinalIgnoreCase) ? "cpp" : arguments[0].ToLowerInvariant();
+            currentLanguage = arguments[0].ToLowerInvariant() switch
+            {
+                "c++" => "cpp",
+                "c#" or "cs" => "csharp",
+                var language => language
+            };
             Console.WriteLine($"Coding language set to {currentLanguage}.");
         }
 
@@ -377,7 +386,7 @@ namespace Main
                     break;
 
                 case "LANGUAGES":
-                    Console.WriteLine("Available languages: cpp, python, custom");
+                    Console.WriteLine("Available languages: cpp, csharp, python, custom");
                     break;
 
                 case "LANGUAGE":
@@ -388,7 +397,7 @@ namespace Main
                 case "DOCS":
                     if (parsedInput.arguments.Count != 1 || !languageDocs.TryGetValue(parsedInput.arguments[0], out string? documentationUrl))
                     {
-                        Console.WriteLine("Use DOCS -cpp, DOCS -python, or DOCS -custom.");
+                        Console.WriteLine("Use DOCS -cpp, DOCS -csharp, DOCS -python, or DOCS -custom.");
                         break;
                     }
                     Console.WriteLine(documentationUrl);
@@ -419,7 +428,7 @@ namespace Main
         
         public static async Task Main(string[] args)
         { 
-            Console.WriteLine("Terminal Loaded");
+            Console.WriteLine($"Ashura Terminal {Version}");
             Console.WriteLine(OperatingSystem.IsBrowser()
                 ? "Web storage is available for this session."
                 : "Files are stored in the AshuraTerminal/files application-data folder.");
