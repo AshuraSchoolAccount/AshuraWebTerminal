@@ -10,7 +10,7 @@ namespace Main
 { 
     public class Program 
     { 
-        private const string Version = "Public beta 1";
+        private const string Version = "Public beta 1.01";
         public static string commands = "HELP, EXIT, FETCH -IP, MAKEFILE [-path], EDITFILE [-path], CODE -path [-language], RUN -path, LOADFILE [-path], LISTFILES, LISTFOLDERS, OPENFOLDER -name, ADDFOLDER -name, PRESETFOLDERS, LANGUAGES, LANGUAGE -name, DOCS -name ";
         private static readonly HttpClient httpClient = new HttpClient();
         private static readonly IAtFileStore fileStore = CreateFileStore();

@@ -444,7 +444,7 @@ document.querySelector('#backupInput').onchange = async event => {
 (async () => {
   try {
     database = await openDatabase();
-    print('Ashura Terminal Public beta 1 ready. Files persist in this browser with IndexedDB.', 'accent');
+    print('Ashura Terminal Public beta 1.01 ready. Files persist in this browser with IndexedDB.', 'accent');
     await refreshTree();
   } catch (error) { print(`Browser storage unavailable: ${error.message}`, 'error'); }
 })();
