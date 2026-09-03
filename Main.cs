@@ -556,6 +556,10 @@ namespace Main
                     catch (Exception e) { Console.WriteLine(e.Message); }
                     break;
 
+                case "DEVMODE":
+                    Console.WriteLine("if you saw this and thought you were gonna get something special you are a loser.");
+                    break;
+
                 case "DOCS":
                     if (parsedInput.arguments.Count != 1 || !languageDocs.TryGetValue(parsedInput.arguments[0], out string? documentationUrl))
                     {

@@ -20,6 +20,7 @@ const languageDocs = {
   custom: 'https://github.com/AshuraSchoolAccount/AshuraWebTerminal/blob/main/docs/CUSTOM_LANGUAGE.md'
 };
 const languageAliases = { 'c++': 'cpp', 'c#': 'csharp', cs: 'csharp' };
+const languageExtensions = { custom: 'at', cpp: 'cpp', csharp: 'cs', python: 'py' };
 
 function openDatabase() {
   return new Promise((resolve, reject) => {
@@ -83,9 +84,19 @@ function downloadWorkspace() {
   }).catch(error => print(error.message, 'error'));
 }
 
+function selectedLanguage() {
+  return languageAliases[languageInput.value.toLowerCase()] || languageInput.value.toLowerCase();
+}
+function languageForPath(path) {
+  const extension = path.toLowerCase().split('.').pop();
+  return Object.entries(languageExtensions).find(([, fileExtension]) => fileExtension === extension)?.[0] || null;
+}
+function updateSaveButton() {
+  document.querySelector('#saveButton').textContent = `Save .${languageExtensions[selectedLanguage()]}`;
+}
 function normalizeFile(value) {
   let path = value.trim().replaceAll('\\', '/');
-  if (!path.includes('.')) path += '.at';
+  if (!path.includes('.')) path += `.${languageExtensions[selectedLanguage()]}`;
   if (!path || path.startsWith('/') || path.includes('..') || path.split('/').some(part => !part)) throw new Error('Use a relative .at path such as documents/example.at.');
   return path;
 }
@@ -198,6 +209,12 @@ async function selectFile(path) {
   if (!file) return print(`File '${path}' does not exist.`, 'error');
   pathInput.value = path;
   editor.value = file.content;
+  const language = languageForPath(path);
+  if (language) {
+    languageInput.value = language;
+    updateDocsLink();
+    updateSaveButton();
+  }
   editorStatus.textContent = 'Loaded from IndexedDB';
 }
 async function openFolder(path) {
@@ -219,7 +236,7 @@ async function run(input) {
   const { command, args } = parse(input);
   if (!command) return;
   switch (command) {
-    case 'HELP': print('MAKEFILE, EDITFILE, RUN -path, LOADFILE, LISTFILES, LISTFOLDERS, OPENFOLDER, ADDFOLDER, PRESETFOLDERS, LANGUAGES, LANGUAGE -name, DOCS -name, FETCH -IP, CLEAR'); break;
+    case 'HELP': print('MAKEFILE, EDITFILE, RUN -path, LOADFILE, LISTFILES, LISTFOLDERS, OPENFOLDER, ADDFOLDER, PRESETFOLDERS, LANGUAGES, LANGUAGE -name, DEVMODE, DOCS -name, FETCH -IP, CLEAR'); break;
     case 'LANGUAGES': print('Available languages: cpp, csharp, python, custom'); break;
     case 'LANGUAGE':
       if (args.length !== 1) throw new Error('Choose cpp, csharp, python, or custom.');
@@ -228,6 +245,7 @@ async function run(input) {
       updateDocsLink();
       print(`Coding language set to ${languageInput.value}.`, 'accent');
       break;
+    case 'DEVMODE': print('if you saw this and thought you were gonna get something special you are a loser.'); break;
     case 'DOCS':
       if (args.length !== 1) throw new Error('Use DOCS -cpp, DOCS -csharp, DOCS -python, or DOCS -custom.');
       {
@@ -280,8 +298,12 @@ document.querySelector('#saveButton').onclick = async () => {
 };
 document.querySelector('#presetButton').onclick = () => run('PRESETFOLDERS');
 document.querySelector('#clearButton').onclick = () => output.replaceChildren();
-function updateDocsLink() { docsLink.href = languageDocs[languageInput.value]; }
-languageInput.onchange = updateDocsLink;
+function updateDocsLink() { docsLink.href = languageDocs[selectedLanguage()]; }
+languageInput.onchange = () => {
+  updateDocsLink();
+  updateSaveButton();
+};
+updateSaveButton();
 editor.addEventListener('keydown', async event => {
   if (event.shiftKey && event.key === 'Enter') {
     event.preventDefault();
